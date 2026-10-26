@@ -22,6 +22,12 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 
+// In development any localhost port is accepted (Vite moves to 5174+ when 5173 is busy).
+// Production only accepts the explicit CLIENT_ORIGINS allowlist.
+const LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d{2,5}$/;
+const isAllowedOrigin = (origin) =>
+  env.allowedOrigins.includes(origin) || (!env.isProduction && LOCAL_ORIGIN.test(origin));
+
 const app = express();
 
 if (env.TRUST_PROXY) app.set('trust proxy', 1);
@@ -37,7 +43,7 @@ app.use(
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin || env.allowedOrigins.includes(origin)) return cb(null, true);
+      if (!origin || isAllowedOrigin(origin)) return cb(null, true);
       return cb(new Error('CORS: origin not allowed'));
     },
     credentials: true,
